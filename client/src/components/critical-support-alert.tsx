@@ -140,6 +140,8 @@ export default function CriticalSupportAlert({ onClose }: CriticalSupportAlertPr
                 variant="outline"
                 size="sm"
                 onClick={onClose}
+                }}
+                
                 className="text-xs"
               >
                 Entiendo, cerrar

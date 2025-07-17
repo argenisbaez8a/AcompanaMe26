@@ -37,7 +37,7 @@ export default function Home({ userId }: HomeProps) {
               <Heart className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-dark-text">MindCare</h1>
+              <h1 className="text-lg font-semibold text-dark-text">AcompañaMe</h1>
               <p className="text-sm text-muted-text">
                 {user ? `Hola, ${user.name}` : "Hola"}
               </p>

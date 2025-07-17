@@ -65,7 +65,7 @@ export default function Onboarding({ onUserCreated }: OnboardingProps) {
           <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
             <Heart className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl text-dark-text">Bienvenido a MindCare</CardTitle>
+          <CardTitle className="text-2xl text-dark-text">Bienvenido a AcompañaMe</CardTitle>
           <p className="text-sm text-muted-text mt-2">
             Tu compañero de bienestar emocional personalizado
           </p>
