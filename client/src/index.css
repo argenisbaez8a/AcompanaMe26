@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(248, 100%, 98%);
+  --foreground: hsl(213, 31%, 20%);
+  --muted: hsl(210, 25%, 98%);
+  --muted-foreground: hsl(215, 16%, 47%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(213, 31%, 20%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(213, 31%, 20%);
+  --border: hsl(214, 32%, 91%);
+  --input: hsl(214, 32%, 91%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(168, 41%, 64%);
+  --secondary-foreground: hsl(168, 100%, 10%);
+  --accent: hsl(210, 25%, 98%);
+  --accent-foreground: hsl(213, 31%, 20%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(210, 20%, 98%);
+  --ring: hsl(213, 31%, 20%);
+  --radius: 0.75rem;
+  --warning: hsl(38, 92%, 50%);
+  --success: hsl(142, 76%, 36%);
+  --soft-blue: hsl(207, 89%, 96%);
+  --emergency: hsl(0, 84%, 60%);
+  --light-bg: hsl(210, 29%, 97%);
+  --dark-text: hsl(213, 31%, 20%);
+  --muted-text: hsl(215, 16%, 47%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(168, 41%, 64%);
+  --secondary-foreground: hsl(168, 100%, 10%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --warning: hsl(38, 92%, 50%);
+  --success: hsl(142, 76%, 36%);
+  --soft-blue: hsl(207, 89%, 96%);
+  --emergency: hsl(0, 84%, 60%);
+  --light-bg: hsl(240, 10%, 3.9%);
+  --dark-text: hsl(0, 0%, 98%);
+  --muted-text: hsl(240, 5%, 64.9%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-dark-text {
+    color: hsl(var(--dark-text));
+  }
+  
+  .text-muted-text {
+    color: hsl(var(--muted-text));
+  }
+  
+  .bg-light-bg {
+    background-color: hsl(var(--light-bg));
+  }
+  
+  .bg-soft-blue {
+    background-color: hsl(var(--soft-blue));
+  }
+  
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  
+  .bg-warning {
+    background-color: hsl(var(--warning));
+  }
+  
+  .text-success {
+    color: hsl(var(--success));
+  }
+  
+  .bg-success {
+    background-color: hsl(var(--success));
+  }
+  
+  .text-emergency {
+    color: hsl(var(--emergency));
+  }
+  
+  .bg-emergency {
+    background-color: hsl(var(--emergency));
+  }
+}
