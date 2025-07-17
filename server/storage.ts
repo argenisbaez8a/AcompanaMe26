@@ -71,7 +71,8 @@ export class MemStorage implements IStorage {
     const entry: MoodEntry = { 
       ...insertEntry, 
       id, 
-      date: new Date()
+      date: new Date(),
+      notes: insertEntry.notes || null
     };
     this.moodEntries.set(id, entry);
     return entry;

@@ -56,6 +56,8 @@ The application uses three main tables:
 - Emergency contact resources and crisis helplines
 - Mental health center directory
 - Pattern alerts for concerning mood trends
+- Critical support alert popup for severe declining patterns (3+ entries from regular to very bad)
+- Contact suggestions for friends, family, and guardians in crisis situations
 
 ### Mobile-First Design
 - Responsive design optimized for mobile devices

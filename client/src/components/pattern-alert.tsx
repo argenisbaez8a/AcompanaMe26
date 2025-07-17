@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, TrendingDown, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EmergencyResources from "./emergency-resources";
+import CriticalSupportAlert from "./critical-support-alert";
 import type { MoodEntry } from "@shared/schema";
 
 interface PatternAlertProps {
@@ -13,6 +14,7 @@ interface PatternAlertProps {
 export default function PatternAlert({ userId }: PatternAlertProps) {
   const [showEmergency, setShowEmergency] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [showCriticalAlert, setShowCriticalAlert] = useState(false);
 
   const { data: recentMoods } = useQuery<MoodEntry[]>({
     queryKey: ["/api/mood-entries", userId, "trend", "7"],
@@ -20,6 +22,47 @@ export default function PatternAlert({ userId }: PatternAlertProps) {
 
   const analyzePattern = () => {
     if (!recentMoods || recentMoods.length < 3) return null;
+
+    // Check for critical pattern: more than 3 entries declining from regular (3) to very bad (1)
+    const checkCriticalPattern = () => {
+      if (recentMoods.length < 4) return false;
+      
+      // Look for entries that show a decline from 3 to 1 over multiple entries
+      let regularToVeryBadCount = 0;
+      let hasRegularStart = false;
+      
+      for (let i = 0; i < recentMoods.length; i++) {
+        const mood = recentMoods[i].mood;
+        
+        // Check if we start from regular or above
+        if (i === recentMoods.length - 1 && mood >= 3) {
+          hasRegularStart = true;
+        }
+        
+        // Count entries that are in the declining range (3 to 1)
+        if (mood <= 3 && mood >= 1) {
+          regularToVeryBadCount++;
+        }
+      }
+      
+      // Check if we have a clear declining pattern with very bad moods
+      const veryBadCount = recentMoods.filter(entry => entry.mood === 1).length;
+      const lowMoodCount = recentMoods.filter(entry => entry.mood <= 2).length;
+      
+      return (regularToVeryBadCount >= 4 && veryBadCount >= 2) || 
+             (lowMoodCount >= 3 && veryBadCount >= 1);
+    };
+
+    const isCritical = checkCriticalPattern();
+    
+    if (isCritical) {
+      return {
+        type: 'critical',
+        title: 'Patrón Crítico Detectado',
+        message: 'Se detectó un patrón preocupante en tu estado emocional. Es importante buscar apoyo.',
+        severity: 'critical'
+      };
+    }
 
     const last3Days = recentMoods.slice(0, 3);
     const lowMoodCount = last3Days.filter(entry => entry.mood <= 2).length;
@@ -57,6 +100,13 @@ export default function PatternAlert({ userId }: PatternAlertProps) {
   };
 
   const pattern = analyzePattern();
+
+  // Check for critical pattern and trigger alert
+  useEffect(() => {
+    if (pattern && pattern.type === 'critical' && !showCriticalAlert) {
+      setShowCriticalAlert(true);
+    }
+  }, [pattern, showCriticalAlert]);
 
   if (!pattern) return null;
 
@@ -148,6 +198,9 @@ export default function PatternAlert({ userId }: PatternAlertProps) {
       
       {showEmergency && (
         <EmergencyResources onClose={() => setShowEmergency(false)} />
+      )}
+      {showCriticalAlert && (
+        <CriticalSupportAlert onClose={() => setShowCriticalAlert(false)} />
       )}
     </>
   );
