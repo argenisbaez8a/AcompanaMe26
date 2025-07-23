@@ -44,7 +44,9 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser, 
       id, 
-      createdAt: new Date()
+      createdAt: new Date(),
+      guardianEmail: (insertUser.guardianEmail && insertUser.guardianEmail.trim()) || null,
+      guardianName: (insertUser.guardianName && insertUser.guardianName.trim()) || null
     };
     this.users.set(id, user);
     return user;

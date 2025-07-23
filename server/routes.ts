@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertMoodEntrySchema, insertExerciseSessionSchema } from "@shared/schema";
+import { sendCriticalPatternAlert } from "./email";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -79,6 +80,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(sessions);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch exercise sessions" });
+    }
+  });
+
+  // Email notification route for critical patterns
+  app.post("/api/send-critical-alert", async (req, res) => {
+    try {
+      const { userId, patternType } = z.object({
+        userId: z.number(),
+        patternType: z.string()
+      }).parse(req.body);
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (!user.guardianEmail) {
+        return res.status(400).json({ error: "No guardian email configured" });
+      }
+
+      const recentMoods = await storage.getRecentMoodTrend(userId, 7);
+      const patternDetails = `Se detectaron ${recentMoods.filter(m => m.mood <= 2).length} registros con estado emocional bajo en los últimos 7 días. Los registros muestran una tendencia preocupante que requiere atención.`;
+
+      const emailSent = await sendCriticalPatternAlert({
+        to: user.guardianEmail,
+        guardianName: user.guardianName || 'Tutor/Padre',
+        studentName: user.name,
+        patternDetails
+      });
+
+      if (emailSent) {
+        res.json({ success: true, message: "Alert email sent successfully" });
+      } else {
+        res.status(500).json({ error: "Failed to send alert email" });
+      }
+    } catch (error) {
+      console.error('Error sending critical alert:', error);
+      res.status(400).json({ error: "Invalid request data" });
     }
   });
 

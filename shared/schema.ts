@@ -7,6 +7,8 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   age: integer("age").notNull(),
   gender: text("gender").notNull(),
+  guardianEmail: text("guardian_email"), // Email for parent/teacher notifications
+  guardianName: text("guardian_name"), // Name of parent/teacher
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -30,6 +32,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   name: true,
   age: true,
   gender: true,
+  guardianEmail: true,
+  guardianName: true,
+}).extend({
+  guardianEmail: z.string().email().optional().or(z.literal("")),
+  guardianName: z.string().optional().or(z.literal(""))
 });
 
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).pick({

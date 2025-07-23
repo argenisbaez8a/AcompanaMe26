@@ -20,6 +20,8 @@ export default function Onboarding({ onUserCreated }: OnboardingProps) {
     name: "",
     age: 0,
     gender: "",
+    guardianEmail: "",
+    guardianName: "",
   });
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -113,6 +115,36 @@ export default function Onboarding({ onUserCreated }: OnboardingProps) {
                   <SelectItem value="prefiero-no-decir">Prefiero no decir</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div className="space-y-4 pt-4 border-t border-gray-200">
+              <div className="text-center">
+                <h3 className="text-sm font-medium text-dark-text mb-2">Información de Contacto (Opcional)</h3>
+                <p className="text-xs text-muted-text mb-4">
+                  Para que podamos notificar a tu tutor o padre en caso de detectar patrones preocupantes en tu bienestar
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="guardianName">Nombre del tutor/padre</Label>
+                <Input
+                  id="guardianName"
+                  value={formData.guardianName || ""}
+                  onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })}
+                  placeholder="Nombre completo"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="guardianEmail">Email del tutor/padre</Label>
+                <Input
+                  id="guardianEmail"
+                  type="email"
+                  value={formData.guardianEmail || ""}
+                  onChange={(e) => setFormData({ ...formData, guardianEmail: e.target.value })}
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
             </div>
             
             <Button 

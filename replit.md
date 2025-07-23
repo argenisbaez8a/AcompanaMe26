@@ -1,4 +1,4 @@
-# MindCare - Mental Health Support Application
+# AcompañaMe - Mental Health Support Application
 
 ## Overview
 
@@ -28,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Database Schema
 The application uses three main tables:
-- **users**: Stores user profile information (id, name, age, gender, createdAt)
+- **users**: Stores user profile information (id, name, age, gender, guardianEmail, guardianName, createdAt)
 - **mood_entries**: Tracks daily mood entries (id, userId, mood 1-5 scale, notes, date)
 - **exercise_sessions**: Records meditation and breathing exercise sessions (id, userId, type, duration, completedAt)
 
@@ -58,6 +58,15 @@ The application uses three main tables:
 - Pattern alerts for concerning mood trends
 - Critical support alert popup for severe declining patterns (3+ entries from regular to very bad)
 - Contact suggestions for friends, family, and guardians in crisis situations
+- **Email notification system**: Automatically sends alerts to guardians when critical patterns are detected
+
+### Email Notification System
+- **Guardian Contact Management**: Users can optionally provide guardian/parent email during onboarding
+- **Critical Pattern Detection**: System monitors mood entries for concerning patterns (3+ low mood entries)
+- **Automatic Email Alerts**: When critical patterns are detected and user dismisses the alert, an email is automatically sent to the registered guardian
+- **Professional Email Templates**: Comprehensive emails include pattern details, recommendations, and crisis resources
+- **SendGrid Integration**: Uses SendGrid API for reliable email delivery
+- **User-Controlled Notifications**: Emails are only sent when user acknowledges the alert by closing it
 
 ### Mobile-First Design
 - Responsive design optimized for mobile devices
@@ -87,6 +96,7 @@ The application uses three main tables:
 - **Validation**: Zod for schema validation
 - **Database Provider**: Neon Database serverless driver
 - **Session Storage**: connect-pg-simple for PostgreSQL sessions
+- **Email Service**: SendGrid API for email notifications (@sendgrid/mail)
 
 ### Development Tools
 - **Build**: Vite with React plugin

@@ -1,12 +1,46 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Phone, Heart, MessageCircle, AlertTriangle } from "lucide-react";
+import { X, Phone, Heart, MessageCircle, AlertTriangle, Mail } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface CriticalSupportAlertProps {
+  userId: number;
   onClose: () => void;
 }
 
-export default function CriticalSupportAlert({ onClose }: CriticalSupportAlertProps) {
+export default function CriticalSupportAlert({ userId, onClose }: CriticalSupportAlertProps) {
+  const { toast } = useToast();
+  const [emailSent, setEmailSent] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  const handleClose = async () => {
+    if (!emailSent && !isClosing) {
+      setIsClosing(true);
+      try {
+        // Send email notification when closing the alert
+        await apiRequest("POST", "/api/send-critical-alert", {
+          userId: userId,
+          patternType: "critical"
+        });
+        setEmailSent(true);
+        toast({
+          title: "Notificación enviada",
+          description: "Se ha enviado una alerta por correo a tu tutor/padre",
+          duration: 3000,
+        });
+      } catch (error) {
+        console.error("Error sending email alert:", error);
+        toast({
+          title: "Notificación registrada",
+          description: "Tu solicitud de ayuda ha sido registrada",
+          duration: 3000,
+        });
+      }
+    }
+    onClose();
+  };
   const supportOptions = [
     {
       title: "Llama a un amigo cercano",
@@ -56,7 +90,7 @@ export default function CriticalSupportAlert({ onClose }: CriticalSupportAlertPr
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={onClose}
+                onClick={handleClose}
                 className="rounded-full"
               >
                 <X className="w-5 h-5" />
@@ -71,6 +105,12 @@ export default function CriticalSupportAlert({ onClose }: CriticalSupportAlertPr
                 Detectamos más de 3 registros que van de regular a muy mal. 
                 Es importante que busques apoyo de personas cercanas.
               </p>
+              {!emailSent && (
+                <div className="mt-3 flex items-center space-x-2 text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                  <Mail className="w-4 h-4" />
+                  <span>Al cerrar esta alerta, se enviará una notificación a tu tutor/padre por correo</span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4 mb-6">
@@ -139,12 +179,10 @@ export default function CriticalSupportAlert({ onClose }: CriticalSupportAlertPr
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onClose}
-                }}
-                
+                onClick={handleClose}  
                 className="text-xs"
               >
-                Entiendo, cerrar
+                {emailSent ? "Cerrar" : "Entiendo, cerrar y notificar"}
               </Button>
             </div>
           </div>

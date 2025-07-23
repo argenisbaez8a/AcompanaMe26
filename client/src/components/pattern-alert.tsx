@@ -9,6 +9,7 @@ import type { MoodEntry } from "@shared/schema";
 
 interface PatternAlertProps {
   userId: number;
+  onClose: () => void;
 }
 
 export default function PatternAlert({ userId }: PatternAlertProps) {
@@ -200,7 +201,7 @@ export default function PatternAlert({ userId }: PatternAlertProps) {
         <EmergencyResources onClose={() => setShowEmergency(false)} />
       )}
       {showCriticalAlert && (
-        <CriticalSupportAlert onClose={() => setShowCriticalAlert(false)}/>
+        <CriticalSupportAlert userId={userId} onClose={() => setShowCriticalAlert(false)} />
       )}
     </>
   );
