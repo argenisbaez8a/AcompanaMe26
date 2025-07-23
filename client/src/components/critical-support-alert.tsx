@@ -28,8 +28,12 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
         toast({
           title: "Notificación enviada",
           description: "Se ha enviado una alerta por correo a tu tutor/padre",
-          duration: 3000,
+          duration: 5000,
         });
+        // Wait a moment to show the success message before closing
+        setTimeout(() => {
+          onClose();
+        }, 1000);
       } catch (error) {
         console.error("Error sending email alert:", error);
         toast({
@@ -37,9 +41,11 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
           description: "Tu solicitud de ayuda ha sido registrada",
           duration: 3000,
         });
+        onClose();
       }
+    } else {
+      onClose();
     }
-    onClose();
   };
   const supportOptions = [
     {
@@ -181,8 +187,9 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
                 size="sm"
                 onClick={handleClose}  
                 className="text-xs"
+                disabled={isClosing}
               >
-                {emailSent ? "Cerrar" : "Entiendo, cerrar y notificar"}
+                {isClosing ? "Enviando..." : emailSent ? "Cerrar" : "Entiendo, cerrar y notificar"}
               </Button>
             </div>
           </div>

@@ -35,8 +35,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   guardianEmail: true,
   guardianName: true,
 }).extend({
-  guardianEmail: z.string().email().optional().or(z.literal("")),
-  guardianName: z.string().optional().or(z.literal(""))
+  guardianEmail: z.string().email().optional().or(z.literal("")).optional(),
+  guardianName: z.string().optional().or(z.literal("")).optional()
 });
 
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).pick({
