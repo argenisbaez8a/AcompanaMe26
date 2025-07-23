@@ -2,7 +2,7 @@
 
 ## Overview
 
-MindCare is a comprehensive mental health support application that helps users track their mood, access wellness exercises, and get educational resources about mental health. The app is built as a full-stack TypeScript application with React frontend and Express backend, designed with a mobile-first approach.
+AcompañaMe  is a comprehensive mental health support application that helps users track their mood, access wellness exercises, and get educational resources about mental health. The app is built as a full-stack TypeScript application with React frontend and Express backend, designed with a mobile-first approach.
 
 ## User Preferences
 
