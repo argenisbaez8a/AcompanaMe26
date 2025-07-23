@@ -22,6 +22,7 @@ export default function Home({ userId }: HomeProps) {
   const [showMeditation, setShowMeditation] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
   const [showDepression, setShowDepression] = useState(false);
+  const [showPatternAlert, setShowPatternAlert] = useState(true);
 
   const { data: user } = useQuery<User>({
     queryKey: ["/api/users", userId],
@@ -62,7 +63,9 @@ export default function Home({ userId }: HomeProps) {
         </section>
 
         {/* Pattern Alert */}
-        <PatternAlert userId={userId} onClose={() => {}} />
+        {showPatternAlert && (
+          <PatternAlert userId={userId} onClose={() => setShowPatternAlert(false)} />
+        )}
 
         {/* Mood Tracker */}
         <MoodTracker userId={userId} />
