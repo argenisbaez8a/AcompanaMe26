@@ -15,36 +15,30 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
   const [emailSent, setEmailSent] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
-  const handleClose = async () => {
+  const handleClose = () => {
+    // Always close the alert immediately
+    onClose();
+    
+    // Send email notification in the background if not already sent
     if (!emailSent && !isClosing) {
       setIsClosing(true);
-      try {
-        // Send email notification when closing the alert
-        await apiRequest("POST", "/api/send-critical-alert", {
-          userId: userId,
-          patternType: "critical"
-        });
-        setEmailSent(true);
+      apiRequest("POST", "/api/send-critical-alert", {
+        userId: userId,
+        patternType: "critical"
+      }).then(() => {
         toast({
           title: "Notificación enviada",
           description: "Se ha enviado una alerta por correo a tu tutor/padre",
-          duration: 5000,
+          duration: 3000,
         });
-        // Wait a moment to show the success message before closing
-        setTimeout(() => {
-          onClose();
-        }, 1000);
-      } catch (error) {
+      }).catch((error) => {
         console.error("Error sending email alert:", error);
         toast({
           title: "Notificación registrada",
           description: "Tu solicitud de ayuda ha sido registrada",
           duration: 3000,
         });
-        onClose();
-      }
-    } else {
-      onClose();
+      });
     }
   };
   const supportOptions = [
@@ -187,9 +181,8 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
                 size="sm"
                 onClick={handleClose}  
                 className="text-xs"
-                disabled={isClosing}
               >
-                {isClosing ? "Enviando..." : emailSent ? "Cerrar" : "Entiendo, cerrar y notificar"}
+                Entiendo, cerrar y notificar
               </Button>
             </div>
           </div>
