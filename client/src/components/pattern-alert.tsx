@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, TrendingDown, Info } from "lucide-react";
+import { AlertTriangle, TrendingDown, Info, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -12,10 +12,11 @@ interface PatternAlertProps {
   onClose: () => void;
 }
 
-export default function PatternAlert({ userId }: PatternAlertProps) {
+export default function PatternAlert({ userId, onClose }: PatternAlertProps) {
   const [showEmergency, setShowEmergency] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showCriticalAlert, setShowCriticalAlert] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   const { data: recentMoods } = useQuery<MoodEntry[]>({
     queryKey: ["/api/mood-entries", userId, "trend", "7"],
@@ -109,7 +110,12 @@ export default function PatternAlert({ userId }: PatternAlertProps) {
     }
   }, [pattern, showCriticalAlert]);
 
-  if (!pattern) return null;
+  if (!pattern || !isVisible) return null;
+
+  const handleCloseAlert = () => {
+    setIsVisible(false);
+    if (onClose) onClose();
+  };
 
   const recommendations = [
     "Practica ejercicios de respiración diariamente",
@@ -130,54 +136,64 @@ export default function PatternAlert({ userId }: PatternAlertProps) {
             : 'border-blue-200 bg-blue-50'
         }`}>
           <CardContent className="p-4">
-            <div className="flex items-start space-x-3">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                pattern.severity === 'high' 
-                  ? 'bg-warning' 
-                  : 'bg-blue-500'
-              }`}>
-                {pattern.severity === 'high' ? (
-                  <AlertTriangle className="w-4 h-4 text-white" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 text-white" />
-                )}
-              </div>
-              <div className="flex-1">
-                <h4 className={`font-medium text-sm mb-1 ${
-                  pattern.severity === 'high' ? 'text-warning' : 'text-blue-700'
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-3 flex-1">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  pattern.severity === 'high' 
+                    ? 'bg-warning' 
+                    : 'bg-blue-500'
                 }`}>
-                  {pattern.title}
-                </h4>
-                <p className={`text-xs mb-3 ${
-                  pattern.severity === 'high' ? 'text-warning' : 'text-blue-600'
-                }`}>
-                  {pattern.message}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowRecommendations(!showRecommendations)}
-                    className={`text-xs h-7 ${
-                      pattern.severity === 'high' 
-                        ? 'border-warning text-warning hover:bg-warning hover:text-white' 
-                        : 'border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
-                    }`}
-                  >
-                    <Info className="w-3 h-3 mr-1" />
-                    {showRecommendations ? 'Ocultar' : 'Ver'} recomendaciones
-                  </Button>
-                  {pattern.severity === 'high' && (
-                    <Button
-                      size="sm"
-                      onClick={() => setShowEmergency(true)}
-                      className="text-xs h-7 bg-emergency hover:bg-emergency/90 text-white"
-                    >
-                      Buscar ayuda
-                    </Button>
+                  {pattern.severity === 'high' ? (
+                    <AlertTriangle className="w-4 h-4 text-white" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4 text-white" />
                   )}
                 </div>
+                <div className="flex-1">
+                  <h4 className={`font-medium text-sm mb-1 ${
+                    pattern.severity === 'high' ? 'text-warning' : 'text-blue-700'
+                  }`}>
+                    {pattern.title}
+                  </h4>
+                  <p className={`text-xs mb-3 ${
+                    pattern.severity === 'high' ? 'text-warning' : 'text-blue-600'
+                  }`}>
+                    {pattern.message}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowRecommendations(!showRecommendations)}
+                      className={`text-xs h-7 ${
+                        pattern.severity === 'high' 
+                          ? 'border-warning text-warning hover:bg-warning hover:text-white' 
+                          : 'border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
+                      }`}
+                    >
+                      <Info className="w-3 h-3 mr-1" />
+                      {showRecommendations ? 'Ocultar' : 'Ver'} recomendaciones
+                    </Button>
+                    {pattern.severity === 'high' && (
+                      <Button
+                        size="sm"
+                        onClick={() => setShowEmergency(true)}
+                        className="text-xs h-7 bg-emergency hover:bg-emergency/90 text-white"
+                      >
+                        Buscar ayuda
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCloseAlert}
+                className="h-6 w-6 rounded-full hover:bg-gray-200 flex-shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
             
             {showRecommendations && (
