@@ -3,11 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
-import type { InsertMoodEntry } from "@shared/schema";
+import { LocalStorage } from "@/lib/localStorage";
 
 interface MoodTrackerProps {
   userId: number;
@@ -16,8 +14,8 @@ interface MoodTrackerProps {
 export default function MoodTracker({ userId }: MoodTrackerProps) {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const moodOptions = [
     { value: 1, label: "Muy mal", color: "bg-red-500", emoji: "😢" },
@@ -26,26 +24,6 @@ export default function MoodTracker({ userId }: MoodTrackerProps) {
     { value: 4, label: "Bien", color: "bg-green-500", emoji: "😊" },
     { value: 5, label: "Excelente", color: "bg-green-600", emoji: "😄" },
   ];
-
-  const saveMoodMutation = useMutation({
-    mutationFn: (entry: InsertMoodEntry) => apiRequest("POST", "/api/mood-entries", entry),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mood-entries"] });
-      toast({
-        title: "Estado guardado",
-        description: "Tu estado de ánimo ha sido registrado exitosamente.",
-      });
-      setSelectedMood(null);
-      setNotes("");
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "No se pudo guardar tu estado de ánimo.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleSave = () => {
     if (!selectedMood) {
@@ -57,11 +35,32 @@ export default function MoodTracker({ userId }: MoodTrackerProps) {
       return;
     }
 
-    saveMoodMutation.mutate({
-      userId,
-      mood: selectedMood,
-      notes: notes.trim() || undefined,
-    });
+    setIsSaving(true);
+    
+    try {
+      LocalStorage.addMoodEntry({
+        userId,
+        mood: selectedMood,
+        notes: notes.trim() || undefined,
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      });
+
+      toast({
+        title: "Estado guardado",
+        description: "Tu estado de ánimo ha sido registrado localmente.",
+      });
+      
+      setSelectedMood(null);
+      setNotes("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo guardar tu estado de ánimo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -115,9 +114,9 @@ export default function MoodTracker({ userId }: MoodTrackerProps) {
           <Button
             onClick={handleSave}
             className="w-full"
-            disabled={saveMoodMutation.isPending}
+            disabled={isSaving}
           >
-            {saveMoodMutation.isPending ? (
+            {isSaving ? (
               "Guardando..."
             ) : (
               <>

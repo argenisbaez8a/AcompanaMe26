@@ -1,11 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, TrendingDown, Info, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import EmergencyResources from "./emergency-resources";
+import { X, AlertTriangle, TrendingDown, Info } from "lucide-react";
 import CriticalSupportAlert from "./critical-support-alert";
-import type { MoodEntry } from "@shared/schema";
+import EmergencyResources from "./emergency-resources";
+import { LocalStorage } from "@/lib/localStorage";
+
+interface MoodEntry {
+  id: number;
+  userId: number;
+  mood: number;
+  notes?: string;
+  date: string;
+}
 
 interface PatternAlertProps {
   userId: number;
@@ -17,10 +24,24 @@ export default function PatternAlert({ userId, onClose }: PatternAlertProps) {
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showCriticalAlert, setShowCriticalAlert] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [recentMoods, setRecentMoods] = useState<MoodEntry[]>([]);
 
-  const { data: recentMoods } = useQuery<MoodEntry[]>({
-    queryKey: ["/api/mood-entries", userId, "trend", "7"],
-  });
+  useEffect(() => {
+    const loadRecentMoods = () => {
+      const entries = LocalStorage.getMoodEntries(userId);
+      // Get last 7 entries sorted by date
+      const sortedEntries = entries
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 7);
+      setRecentMoods(sortedEntries);
+    };
+
+    loadRecentMoods();
+    
+    // Listen for changes
+    const interval = setInterval(loadRecentMoods, 2000);
+    return () => clearInterval(interval);
+  }, [userId]);
 
   const analyzePattern = () => {
     if (!recentMoods || recentMoods.length < 3) return null;
@@ -73,29 +94,11 @@ export default function PatternAlert({ userId, onClose }: PatternAlertProps) {
     // Alert if 3 consecutive low moods or average mood is very low
     if (lowMoodCount >= 3 || averageMood <= 2.5) {
       return {
-        type: 'warning',
-        title: 'Patrón Detectado',
-        message: 'Has registrado estados bajos por varios días consecutivos. Considera hablar con un profesional.',
+        type: 'declining',
+        title: 'Tendencia Emocional Descendente',
+        message: 'Hemos notado que tu estado de ánimo ha estado bajo últimamente. Te recomendamos buscar apoyo.',
         severity: 'high'
       };
-    }
-
-    // Alert if declining trend
-    if (recentMoods.length >= 5) {
-      const last5Days = recentMoods.slice(0, 5);
-      const isDeclineTrend = last5Days.every((entry, index) => {
-        if (index === 0) return true;
-        return entry.mood <= last5Days[index - 1].mood;
-      });
-
-      if (isDeclineTrend) {
-        return {
-          type: 'info',
-          title: 'Tendencia Descendente',
-          message: 'Tu estado de ánimo ha mostrado una tendencia descendente. Considera usar más herramientas de bienestar.',
-          severity: 'medium'
-        };
-      }
     }
 
     return null;
