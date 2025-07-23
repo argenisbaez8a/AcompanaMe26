@@ -1,7 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, AlertTriangle } from "lucide-react";
-import { useEffect } from "react";
+import { X, Phone, Heart, MessageCircle, AlertTriangle, Mail } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface CriticalSupportAlertProps {
   userId: number;
@@ -9,42 +11,78 @@ interface CriticalSupportAlertProps {
 }
 
 export default function CriticalSupportAlert({ userId, onClose }: CriticalSupportAlertProps) {
-  
-  // Handle immediate close with escape key
-  useEffect(() => {
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
+  const { toast } = useToast();
+  const [emailSent, setEmailSent] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
-    document.addEventListener('keydown', handleEscapeKey);
-    return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [onClose]);
-
-  // Simple close handler
   const handleClose = () => {
+    // Always close the alert immediately
     onClose();
+    
+    // Send email notification in the background if not already sent
+    if (!emailSent && !isClosing) {
+      setIsClosing(true);
+      apiRequest("POST", "/api/send-critical-alert", {
+        userId: userId,
+        patternType: "critical"
+      }).then(() => {
+        toast({
+          title: "Notificación enviada",
+          description: "Se ha enviado una alerta por correo a tu tutor/padre",
+          duration: 3000,
+        });
+      }).catch((error) => {
+        console.error("Error sending email alert:", error);
+        toast({
+          title: "Notificación registrada",
+          description: "Tu solicitud de ayuda ha sido registrada",
+          duration: 3000,
+        });
+      });
+    }
+  };
+  const supportOptions = [
+    {
+      title: "Llama a un amigo cercano",
+      description: "Contacta a alguien en quien confíes",
+      icon: MessageCircle,
+      color: "bg-blue-500",
+      action: "Abrir contactos"
+    },
+    {
+      title: "Llama a un familiar",
+      description: "Padres, hermanos o familiares cercanos",
+      icon: Heart,
+      color: "bg-green-500",
+      action: "Contactar familia"
+    },
+    {
+      title: "Llama a tu tutor/cuidador",
+      description: "Persona responsable de tu bienestar",
+      icon: Phone,
+      color: "bg-purple-500",
+      action: "Contactar tutor"
+    }
+  ];
+
+  const handleContactOption = (option: string) => {
+    // Open phone contacts or dialer
+    if (navigator.userAgent.includes('Mobile')) {
+      window.location.href = 'tel:';
+    } else {
+      // For desktop, show a message
+      alert(`Abre tu aplicación de contactos para ${option.toLowerCase()}`);
+    }
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
-      onClick={(e) => {
-        // Only close if clicking the backdrop, not the modal itself
-        if (e.target === e.currentTarget) {
-          handleClose();
-        }
-      }}
-    >
-      <Card className="w-full max-w-sm border-2 border-red-500 bg-white">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-sm border-2 border-warning animate-pulse">
         <CardContent className="p-6">
           <div className="text-center">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-warning rounded-full flex items-center justify-center">
                   <AlertTriangle className="w-5 h-5 text-white" />
                 </div>
                 <h3 className="text-lg font-semibold text-dark-text">Necesitas Apoyo</h3>
@@ -53,52 +91,99 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
                 variant="ghost"
                 size="icon"
                 onClick={handleClose}
-                className="rounded-full hover:bg-gray-200 focus:bg-gray-200"
+                className="rounded-full"
               >
                 <X className="w-5 h-5" />
               </Button>
             </div>
-
-            <div className="mb-6">
-              <p className="text-sm text-muted-text mb-4">
-                He detectado que has tenido varios días difíciles seguidos. No estás solo en esto.
+            
+            <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-6">
+              <p className="text-sm text-warning font-medium mb-2">
+                ⚠️ Tu estado emocional ha mostrado un patrón preocupante
               </p>
+              <p className="text-xs text-muted-text">
+                Detectamos más de 3 registros que van de regular a muy mal. 
+                Es importante que busques apoyo de personas cercanas.
+              </p>
+              {!emailSent && (
+                <div className="mt-3 flex items-center space-x-2 text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                  <Mail className="w-4 h-4" />
+                  <span>Al cerrar esta alerta, se enviará una notificación a tu tutor/padre por correo</span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <h4 className="font-medium text-dark-text text-sm">
+                Te sugerimos contactar a:
+              </h4>
               
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <h4 className="text-sm font-medium text-red-800 mb-2">
-                  🚨 Recursos de Crisis Inmediatos:
-                </h4>
-                <div className="text-sm text-red-700 space-y-1">
-                  <p>• <strong>Línea de Crisis:</strong> 988 (24/7)</p>
-                  <p>• <strong>Emergencia:</strong> 911</p>
-                  <p>• <strong>Texto de Crisis:</strong> Envía "HOLA" al 741741</p>
+              {supportOptions.map((option, index) => {
+                const IconComponent = option.icon;
+                return (
+                  <Card key={index} className="p-3 hover:bg-gray-50 cursor-pointer transition-colors">
+                    <CardContent className="p-0">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 ${option.color} rounded-full flex items-center justify-center`}>
+                          <IconComponent className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-sm font-medium text-dark-text">
+                            {option.title}
+                          </p>
+                          <p className="text-xs text-muted-text">
+                            {option.description}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleContactOption(option.action)}
+                          className="text-xs"
+                        >
+                          {option.action}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <div className="flex items-start space-x-3">
+                <Phone className="w-5 h-5 text-emergency flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-emergency mb-1">
+                    ¿Necesitas ayuda inmediata?
+                  </p>
+                  <p className="text-xs text-red-600 mb-2">
+                    Si tienes pensamientos de lastimarte, llama ahora:
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => window.location.href = 'tel:988'}
+                    className="bg-emergency hover:bg-emergency/90 text-white"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Línea de Crisis 988
+                  </Button>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <p className="text-xs text-muted-text">
+            <div className="text-center">
+              <p className="text-xs text-muted-text mb-3">
                 Recuerda: Pedir ayuda es un acto de valentía, no de debilidad
               </p>
-              
-              <div className="flex flex-col space-y-2">
-                <Button
-                  size="sm"
-                  onClick={handleClose}  
-                  className="text-sm w-full bg-primary hover:bg-primary/90"
-                >
-                  Entiendo - Cerrar
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClose}
-                  className="text-sm w-full"
-                >
-                  Hablaré con alguien
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClose}  
+                className="text-xs"
+              >
+                Entiendo, cerrar y notificar
+              </Button>
             </div>
           </div>
         </CardContent>

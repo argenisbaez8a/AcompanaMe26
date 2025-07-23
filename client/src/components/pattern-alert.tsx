@@ -113,11 +113,6 @@ export default function PatternAlert({ userId, onClose }: PatternAlertProps) {
     }
   }, [pattern, showCriticalAlert]);
 
-  // Handler to close critical alert
-  const handleCloseCriticalAlert = () => {
-    setShowCriticalAlert(false);
-  };
-
   if (!pattern || !isVisible) return null;
 
   const handleCloseAlert = () => {
@@ -225,10 +220,7 @@ export default function PatternAlert({ userId, onClose }: PatternAlertProps) {
         <EmergencyResources onClose={() => setShowEmergency(false)} />
       )}
       {showCriticalAlert && (
-        <CriticalSupportAlert 
-          userId={userId} 
-          onClose={handleCloseCriticalAlert}
-        />
+        <CriticalSupportAlert userId={userId} onClose={() => setShowCriticalAlert(false)} />
       )}
     </>
   );
