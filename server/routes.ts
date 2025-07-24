@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const emailSent = await sendCriticalPatternAlert({
         to: user.guardianEmail,
         guardianName: user.guardianName || 'Tutor/Padre',
-        studentName: user.name,
+        studentName: user.username,
         patternDetails
       });
 

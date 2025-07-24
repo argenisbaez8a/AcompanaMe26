@@ -4,15 +4,8 @@ import { Button } from "@/components/ui/button";
 import { X, AlertTriangle, TrendingDown, Info } from "lucide-react";
 import CriticalSupportAlert from "./critical-support-alert";
 import EmergencyResources from "./emergency-resources";
-import { LocalStorage } from "@/lib/localStorage";
-
-interface MoodEntry {
-  id: number;
-  userId: number;
-  mood: number;
-  notes?: string;
-  date: string;
-}
+import { useQuery } from "@tanstack/react-query";
+import type { MoodEntry } from "@shared/schema";
 
 interface PatternAlertProps {
   userId: number;
@@ -24,24 +17,22 @@ export default function PatternAlert({ userId, onClose }: PatternAlertProps) {
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showCriticalAlert, setShowCriticalAlert] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [recentMoods, setRecentMoods] = useState<MoodEntry[]>([]);
 
-  useEffect(() => {
-    const loadRecentMoods = () => {
-      const entries = LocalStorage.getMoodEntries(userId);
+  const { data: recentMoods = [] } = useQuery({
+    queryKey: ['/api/mood-entries', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/mood-entries/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch mood entries');
+      }
+      const entries: MoodEntry[] = await response.json();
       // Get last 7 entries sorted by date
-      const sortedEntries = entries
+      return entries
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 7);
-      setRecentMoods(sortedEntries);
-    };
-
-    loadRecentMoods();
-    
-    // Listen for changes
-    const interval = setInterval(loadRecentMoods, 2000);
-    return () => clearInterval(interval);
-  }, [userId]);
+    },
+    refetchInterval: 1000, // Check every second for pattern changes
+  });
 
   const analyzePattern = () => {
     if (!recentMoods || recentMoods.length < 3) return null;

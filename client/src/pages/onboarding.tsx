@@ -7,14 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { LocalStorage } from "@/lib/localStorage";
+import { useMutation } from "@tanstack/react-query";
+import type { InsertUser } from "@shared/schema";
 
 interface OnboardingProps {
   onUserCreated: (userId: number) => void;
 }
 
 interface UserFormData {
-  name: string;
+  username: string;
   age: number;
   gender: string;
   guardianEmail?: string;
@@ -23,20 +24,51 @@ interface UserFormData {
 
 export default function Onboarding({ onUserCreated }: OnboardingProps) {
   const [formData, setFormData] = useState<UserFormData>({
-    name: "",
+    username: "",
     age: 0,
     gender: "",
     guardianEmail: "",
     guardianName: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  const createUser = useMutation({
+    mutationFn: async (data: InsertUser) => {
+      const response = await fetch(`/api/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create user");
+      }
+      return response.json();
+    },
+    onSuccess: (user) => {
+      localStorage.setItem('mindcare_current_user', user.id.toString());
+      toast({
+        title: "¡Bienvenido!",
+        description: "Tu perfil ha sido creado exitosamente.",
+      });
+      onUserCreated(user.id);
+      setLocation("/home");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo crear tu perfil.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.age || !formData.gender) {
+    if (!formData.username || !formData.age || !formData.gender) {
       toast({
         title: "Campos requeridos",
         description: "Por favor completa todos los campos obligatorios.",
@@ -54,37 +86,13 @@ export default function Onboarding({ onUserCreated }: OnboardingProps) {
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      const user = LocalStorage.addUser({
-        name: formData.name.trim(),
-        age: formData.age,
-        gender: formData.gender,
-        guardianEmail: formData.guardianEmail?.trim() || undefined,
-        guardianName: formData.guardianName?.trim() || undefined,
-      });
-
-      // Set current user session
-      LocalStorage.setCurrentUser(user.id);
-      
-      toast({
-        title: "¡Bienvenido!",
-        description: "Tu perfil ha sido creado exitosamente y guardado localmente.",
-      });
-      
-      onUserCreated(user.id);
-      setLocation("/");
-    } catch (error) {
-      console.error('Error creating user:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear tu perfil. Inténtalo de nuevo.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    createUser.mutate({
+      username: formData.username.trim(),
+      age: formData.age,
+      gender: formData.gender,
+      guardianEmail: formData.guardianEmail?.trim() || undefined,
+      guardianName: formData.guardianName?.trim() || undefined,
+    });
   };
 
   return (
@@ -102,14 +110,14 @@ export default function Onboarding({ onUserCreated }: OnboardingProps) {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name">Nombre *</Label>
+              <Label htmlFor="username">Nombre de usuario *</Label>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 placeholder="¿Cómo te llamas?"
                 required
-                disabled={isSubmitting}
+                disabled={createUser.isPending}
               />
             </div>
 
@@ -122,18 +130,18 @@ export default function Onboarding({ onUserCreated }: OnboardingProps) {
                 max="120"
                 value={formData.age || ""}
                 onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || 0 })}
-                placeholder="¿Cuántos años tienes?"
+                placeholder="Tu edad"
                 required
-                disabled={isSubmitting}
+                disabled={createUser.isPending}
               />
             </div>
 
             <div>
               <Label htmlFor="gender">Género *</Label>
-              <Select 
-                value={formData.gender} 
+              <Select
+                value={formData.gender}
                 onValueChange={(value) => setFormData({ ...formData, gender: value })}
-                disabled={isSubmitting}
+                disabled={createUser.isPending}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona tu género" />
@@ -148,54 +156,43 @@ export default function Onboarding({ onUserCreated }: OnboardingProps) {
             </div>
 
             <div className="pt-4 border-t border-gray-200">
-              <h4 className="font-medium text-sm text-dark-text mb-3">
-                Información del Tutor/Cuidador (Opcional)
-              </h4>
-              <p className="text-xs text-muted-text mb-4">
-                Si eres menor de edad o deseas que alguien sea notificado en caso de patrones preocupantes
+              <p className="text-sm text-muted-text mb-4">
+                <strong>Opcional:</strong> Información de contacto para emergencias
               </p>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="guardianName">Nombre del tutor/cuidador</Label>
+                  <Label htmlFor="guardianName">Nombre del tutor/padre</Label>
                   <Input
                     id="guardianName"
-                    value={formData.guardianName || ""}
+                    value={formData.guardianName}
                     onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })}
-                    placeholder="Nombre del padre/madre/tutor"
-                    disabled={isSubmitting}
+                    placeholder="Nombre del tutor o padre"
+                    disabled={createUser.isPending}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="guardianEmail">Email del tutor/cuidador</Label>
+                  <Label htmlFor="guardianEmail">Email del tutor/padre</Label>
                   <Input
                     id="guardianEmail"
                     type="email"
-                    value={formData.guardianEmail || ""}
+                    value={formData.guardianEmail}
                     onChange={(e) => setFormData({ ...formData, guardianEmail: e.target.value })}
-                    placeholder="ejemplo@correo.com"
-                    disabled={isSubmitting}
+                    placeholder="email@ejemplo.com"
+                    disabled={createUser.isPending}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="pt-4">
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Creando perfil..." : "Comenzar mi viaje"}
-              </Button>
-            </div>
-
-            <div className="text-center">
-              <p className="text-xs text-muted-text">
-                Tus datos se guardan de forma segura en tu dispositivo
-              </p>
-            </div>
+            <Button 
+              type="submit" 
+              className="w-full mt-6"
+              disabled={createUser.isPending}
+            >
+              {createUser.isPending ? "Creando perfil..." : "Crear mi perfil"}
+            </Button>
           </form>
         </CardContent>
       </Card>

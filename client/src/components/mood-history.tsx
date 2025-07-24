@@ -1,16 +1,8 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { LocalStorage } from "@/lib/localStorage";
-
-interface MoodEntry {
-  id: number;
-  userName: string;
-  mood: number;
-  notes?: string;
-  date: string;
-}
+import { useQuery } from "@tanstack/react-query";
+import type { MoodEntry } from "@shared/schema";
 
 interface MoodHistoryProps {
   userId: number;
@@ -18,32 +10,22 @@ interface MoodHistoryProps {
 
 export default function MoodHistory({ userId }: MoodHistoryProps) {
   const [, setLocation] = useLocation();
-  const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadMoodEntries = () => {
-      setIsLoading(true);
-      try {
-        const entries = LocalStorage.getMoodEntries(userId);
-        // Sort by date descending (most recent first)
-        const sortedEntries = entries.sort((a, b) => 
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-        setMoodEntries(sortedEntries);
-      } catch (error) {
-        console.error('Error loading mood entries:', error);
-      } finally {
-        setIsLoading(false);
+  const { data: moodEntries = [], isLoading } = useQuery({
+    queryKey: ['/api/mood-entries', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/mood-entries/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch mood entries');
       }
-    };
-
-    loadMoodEntries();
-    
-    // Listen for mood entries changes
-    const interval = setInterval(loadMoodEntries, 1000);
-    return () => clearInterval(interval);
-  }, [userId]);
+      const entries: MoodEntry[] = await response.json();
+      // Sort by date descending (most recent first)
+      return entries.sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+    },
+    refetchInterval: 2000, // Refetch every 2 seconds to get updates
+  });
 
   const getMoodEmoji = (mood: number) => {
     switch (mood) {
