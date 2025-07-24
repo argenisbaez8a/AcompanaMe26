@@ -6,7 +6,7 @@ import { LocalStorage } from "@/lib/localStorage";
 
 interface MoodEntry {
   id: number;
-  userId: number;
+  userName: string;
   mood: number;
   notes?: string;
   date: string;

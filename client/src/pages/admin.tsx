@@ -101,7 +101,7 @@ export default function Admin() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `mindcare-data-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `AcompañaMe-data-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -143,7 +143,7 @@ export default function Admin() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Shield className="w-6 h-6 text-primary" />
-              <span>Panel Administrativo - MindCare</span>
+              <span>Panel Administrativo - AcompañaMe</span>
             </CardTitle>
             <p className="text-sm text-muted-text">
               Acceso completo al diario emocional y datos del sistema (Código maestro: 23092309)
