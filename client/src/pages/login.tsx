@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Heart, Key, RotateCcw } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertUser } from "@shared/schema";
 
@@ -15,9 +14,18 @@ interface LoginProps {
   onUserCreated: (userId: number) => void;
 }
 
+interface UserFormData {
+  username: string;
+  age: number;
+  gender: string;
+  guardianEmail?: string;
+  guardianName?: string;
+  personalEmail: string;
+}
+
 export default function Login({ onUserCreated }: LoginProps) {
-  const [formData, setFormData] = useState<InsertUser & { personalEmail: string }>({
-    name: "",
+  const [formData, setFormData] = useState<UserFormData>({
+    username: "",
     age: 0,
     gender: "",
     guardianEmail: "",
@@ -30,10 +38,21 @@ export default function Login({ onUserCreated }: LoginProps) {
   const { toast } = useToast();
 
   const createUserMutation = useMutation({
-    mutationFn: (userData: InsertUser) => apiRequest("POST", "/api/users", userData),
-    onSuccess: async (response) => {
-      const user = await response.json();
-      localStorage.setItem("currentUserId", user.id.toString());
+    mutationFn: async (userData: InsertUser) => {
+      const response = await fetch(`/api/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create user");
+      }
+      return response.json();
+    },
+    onSuccess: (user) => {
+      localStorage.setItem("mindcare_current_user", user.id.toString());
       onUserCreated(user.id);
       toast({
         title: "¡Bienvenido!",
@@ -52,7 +71,7 @@ export default function Login({ onUserCreated }: LoginProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.age || !formData.gender || !formData.personalEmail) {
+    if (!formData.username || !formData.age || !formData.gender || !formData.personalEmail) {
       toast({
         title: "Campos requeridos",
         description: "Por favor completa todos los campos obligatorios.",
@@ -63,7 +82,7 @@ export default function Login({ onUserCreated }: LoginProps) {
 
     // Prepare user data for submission
     const userData: InsertUser = {
-      name: formData.name,
+      username: formData.username,
       age: formData.age,
       gender: formData.gender,
       guardianEmail: formData.guardianEmail || undefined,
@@ -76,7 +95,7 @@ export default function Login({ onUserCreated }: LoginProps) {
   const handleMasterCodeAccess = () => {
     if (masterCode === "23092309") {
       // Clear any existing user data and restart
-      localStorage.removeItem("currentUserId");
+      localStorage.removeItem("mindcare_current_user");
       toast({
         title: "Acceso autorizado",
         description: "Reiniciando el diario emocional...",
@@ -106,13 +125,14 @@ export default function Login({ onUserCreated }: LoginProps) {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name">Nombre completo *</Label>
+              <Label htmlFor="username">Nombre de usuario *</Label>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 placeholder="¿Cómo te llamas?"
                 required
+                disabled={createUserMutation.isPending}
               />
             </div>
 
@@ -127,6 +147,7 @@ export default function Login({ onUserCreated }: LoginProps) {
                 min="13"
                 max="120"
                 required
+                disabled={createUserMutation.isPending}
               />
             </div>
 
@@ -135,6 +156,7 @@ export default function Login({ onUserCreated }: LoginProps) {
               <Select 
                 value={formData.gender} 
                 onValueChange={(value) => setFormData({ ...formData, gender: value })}
+                disabled={createUserMutation.isPending}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona tu género" />
@@ -155,63 +177,70 @@ export default function Login({ onUserCreated }: LoginProps) {
                 type="email"
                 value={formData.personalEmail}
                 onChange={(e) => setFormData({ ...formData, personalEmail: e.target.value })}
-                placeholder="tu-correo@ejemplo.com"
+                placeholder="tu@email.com"
                 required
+                disabled={createUserMutation.isPending}
               />
             </div>
 
-            <div className="space-y-4 pt-4 border-t border-gray-200">
-              <div className="text-center">
-                <h3 className="text-sm font-medium text-dark-text mb-2">Contacto de emergencia (Opcional)</h3>
-                <p className="text-xs text-muted-text mb-4">
-                  Para notificar en caso de detectar patrones preocupantes
-                </p>
-              </div>
+            <div className="pt-4 border-t border-gray-200">
+              <p className="text-sm text-muted-text mb-4">
+                <strong>Opcional:</strong> Información de contacto para emergencias
+              </p>
               
-              <div>
-                <Label htmlFor="guardianName">Nombre del tutor/padre</Label>
-                <Input
-                  id="guardianName"
-                  value={formData.guardianName || ""}
-                  onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })}
-                  placeholder="Nombre completo"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="guardianEmail">Email del tutor/padre</Label>
-                <Input
-                  id="guardianEmail"
-                  type="email"
-                  value={formData.guardianEmail || ""}
-                  onChange={(e) => setFormData({ ...formData, guardianEmail: e.target.value })}
-                  placeholder="correo@ejemplo.com"
-                />
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="guardianName">Nombre del tutor/padre</Label>
+                  <Input
+                    id="guardianName"
+                    value={formData.guardianName}
+                    onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })}
+                    placeholder="Nombre del tutor o padre"
+                    disabled={createUserMutation.isPending}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="guardianEmail">Email del tutor/padre</Label>
+                  <Input
+                    id="guardianEmail"
+                    type="email"
+                    value={formData.guardianEmail}
+                    onChange={(e) => setFormData({ ...formData, guardianEmail: e.target.value })}
+                    placeholder="tutor@email.com"
+                    disabled={createUserMutation.isPending}
+                  />
+                </div>
               </div>
             </div>
-            
+
             <Button 
               type="submit" 
-              className="w-full"
+              className="w-full mt-6"
               disabled={createUserMutation.isPending}
             >
-              {createUserMutation.isPending ? "Creando perfil..." : "Comenzar mi diario"}
+              {createUserMutation.isPending ? "Creando perfil..." : "Crear mi perfil"}
             </Button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="text-center mb-4">
-              <Button 
-                variant="ghost" 
+          {/* Master Code Section */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Key className="w-4 h-4 text-muted-text" />
+                <span className="text-sm text-muted-text">Acceso administrativo</span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
                 size="sm"
                 onClick={() => setShowMasterCodeSection(!showMasterCodeSection)}
-                className="text-xs text-muted-text hover:text-dark-text"
+                className="text-xs"
               >
-                <Key className="w-3 h-3 mr-1" />
-                Acceso administrativo
+                {showMasterCodeSection ? "Ocultar" : "Mostrar"}
               </Button>
             </div>
-            
+
             {showMasterCodeSection && (
               <div className="space-y-3">
                 <div>
@@ -221,19 +250,19 @@ export default function Login({ onUserCreated }: LoginProps) {
                     type="password"
                     value={masterCode}
                     onChange={(e) => setMasterCode(e.target.value)}
-                    placeholder="Ingresa el código"
+                    placeholder="Ingresa el código maestro"
                     className="text-sm"
                   />
                 </div>
-                <Button 
+                <Button
                   type="button"
+                  onClick={handleMasterCodeAccess}
                   variant="outline"
                   size="sm"
-                  onClick={handleMasterCodeAccess}
                   className="w-full text-xs"
                 >
-                  <RotateCcw className="w-3 h-3 mr-1" />
-                  Acceder y reiniciar diario
+                  <RotateCcw className="w-3 h-3 mr-2" />
+                  Acceso administrativo
                 </Button>
               </div>
             )}

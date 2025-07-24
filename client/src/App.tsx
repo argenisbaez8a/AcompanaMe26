@@ -16,7 +16,7 @@ function Router() {
   const [currentUser, setCurrentUser] = useState<number | null>(null);
   
   useEffect(() => {
-    const storedUserId = localStorage.getItem("currentUserId");
+    const storedUserId = localStorage.getItem("mindcare_current_user");
     if (storedUserId) {
       setCurrentUser(parseInt(storedUserId));
     }
@@ -28,6 +28,9 @@ function Router() {
         <Admin />
       </Route>
       <Route path="/">
+        {currentUser ? <Home userId={currentUser} /> : <Login onUserCreated={setCurrentUser} />}
+      </Route>
+      <Route path="/home">
         {currentUser ? <Home userId={currentUser} /> : <Login onUserCreated={setCurrentUser} />}
       </Route>
       <Route path="/progress">
