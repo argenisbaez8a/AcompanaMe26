@@ -220,7 +220,10 @@ export default function PatternAlert({ userId, onClose }: PatternAlertProps) {
         <EmergencyResources onClose={() => setShowEmergency(false)} />
       )}
       {showCriticalAlert && (
-        <CriticalSupportAlert userId={userId} onClose={() => setShowCriticalAlert(false)} />
+        <CriticalSupportAlert userId={userId} onClose= {() => {setShowCriticalAlert(false);
+          setIsVisible(false);
+          
+        }} />
       )}
     </>
   );

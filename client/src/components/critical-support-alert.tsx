@@ -18,7 +18,7 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
   const handleClose = () => {
     // Always close the alert immediately
     onClose();
-    
+
     // Send email notification in the background if not already sent
     if (!emailSent && !isClosing) {
       setIsClosing(true);
@@ -78,7 +78,7 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-sm border-2 border-warning animate-pulse">
-        <CardContent className="p-6">
+        <CardContent className="p-2">
           <div className="text-center">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center space-x-2">
@@ -96,7 +96,7 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
                 <X className="w-5 h-5" />
               </Button>
             </div>
-            
+
             <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-6">
               <p className="text-sm text-warning font-medium mb-2">
                 ⚠️ Tu estado emocional ha mostrado un patrón preocupante
@@ -117,7 +117,7 @@ export default function CriticalSupportAlert({ userId, onClose }: CriticalSuppor
               <h4 className="font-medium text-dark-text text-sm">
                 Te sugerimos contactar a:
               </h4>
-              
+
               {supportOptions.map((option, index) => {
                 const IconComponent = option.icon;
                 return (
