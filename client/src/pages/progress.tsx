@@ -1,15 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
-import { Heart, TrendingUp, Calendar, Clock } from "lucide-react";
+import { Heart, TrendingUp, Calendar, Clock, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BottomNav from "@/components/bottom-nav";
 import { Button } from "@/components/ui/button";
-import type { MoodEntry, ExerciseSession } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import type { MoodEntry, ExerciseSession, User } from "@shared/schema";
 
 interface ProgressProps {
   userId: number;
 }
 
 export default function Progress({ userId }: ProgressProps) {
+  const { toast } = useToast();
+  
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/users", userId],
+  });
+
   const { data: moodEntries } = useQuery<MoodEntry[]>({
     queryKey: ["/api/mood-entries", userId],
   });
@@ -57,6 +64,61 @@ export default function Progress({ userId }: ProgressProps) {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  const handleDownloadReport = () => {
+    if (!user || !moodEntries) {
+      toast({
+        title: "Error",
+        description: "No hay datos disponibles para descargar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reportData = {
+      usuario: {
+        nombre: user.username,
+        edad: user.age,
+        genero: user.gender,
+        fechaRegistro: user.createdAt
+      },
+      estadisticas: {
+        estadoPromedio: getAverageMood(),
+        totalRegistros: moodEntries.length,
+        tiempoTotalEjercicios: getTotalExerciseTime(),
+        sesionesEjercicio: exercises?.length || 0
+      },
+      registrosEstado: moodEntries.map(entry => ({
+        fecha: entry.date,
+        estado: entry.mood,
+        estadoTexto: getMoodLabel(entry.mood),
+        notas: entry.notes || ""
+      })),
+      sesionesEjercicio: exercises?.map(session => ({
+        tipo: session.type === 'breathing' ? 'Respiración 4-7-8' : 'Meditación',
+        duracion: session.duration,
+        fechaCompletado: session.completedAt
+      })) || [],
+      fechaExportacion: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { 
+      type: 'application/json' 
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Reporte-${user.username}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Reporte descargado",
+      description: `Reporte de ${user.username} guardado exitosamente.`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-light-bg flex flex-col">
       {/* Header */}
@@ -71,6 +133,15 @@ export default function Progress({ userId }: ProgressProps) {
               <p className="text-sm text-muted-text">Resumen de tu bienestar</p>
             </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadReport}
+            className="flex items-center space-x-2"
+          >
+            <Download className="w-4 h-4" />
+            <span>Descargar</span>
+          </Button>
         </div>
       </header>
 

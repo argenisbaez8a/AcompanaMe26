@@ -40,7 +40,7 @@ export default function Home({ userId }: HomeProps) {
             <div>
               <h1 className="text-lg font-semibold text-dark-text">AcompañaMe</h1>
               <p className="text-sm text-muted-text">
-                {user ? `Hola, ${user.name}` : "Hola"}
+                {user ? `Hola, ${user.username}` : "Hola"}
               </p>
             </div>
           </div>

@@ -21,8 +21,9 @@ export default function Profile({ userId }: ProfileProps) {
   });
 
   const handleLogout = () => {
+    localStorage.removeItem("mindcare_current_user");
     localStorage.removeItem("currentUserId");
-    window.location.reload();
+    window.location.href = "/";
   };
 
   return (
@@ -53,7 +54,7 @@ export default function Profile({ userId }: ProfileProps) {
               </div>
               <div>
                 <CardTitle className="text-xl text-dark-text">
-                  {user?.name || "Usuario"}
+                  {user?.username || "Usuario"}
                 </CardTitle>
                 <p className="text-sm text-muted-text">
                   {user?.age ? `${user.age} años` : ""} {user?.gender && user.age ? "• " : ""}{user?.gender || ""}
