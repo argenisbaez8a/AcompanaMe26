@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Shield, Calendar, Users, BarChart3, Download, Trash2, FileText, Mail, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { LocalStorage } from "@/lib/localStorage";
+import { useQuery } from "@tanstack/react-query";
 
 interface MoodEntry {
   id: number;
@@ -18,7 +17,7 @@ interface MoodEntry {
 
 interface User {
   id: number;
-  name: string;
+  username: string;
   age: number;
   gender: string;
   guardianEmail?: string;
@@ -28,23 +27,25 @@ interface User {
 
 export default function Admin() {
   const [, setLocation] = useLocation();
-  const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [allMoodEntries, setAllMoodEntries] = useState<MoodEntry[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const loadAllData = () => {
-      const users = LocalStorage.getAllUsers();
-      const moodEntries = LocalStorage.getAllMoodEntries();
-      
-      setAllUsers(users);
-      setAllMoodEntries(moodEntries.sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      ));
-    };
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['/api/users'],
+    queryFn: async () => {
+      const response = await fetch('/api/users');
+      if (!response.ok) return [];
+      return response.json();
+    }
+  });
 
-    loadAllData();
-  }, []);
+  const { data: allMoodEntries = [] } = useQuery({
+    queryKey: ['/api/mood-entries'],
+    queryFn: async () => {
+      const response = await fetch('/api/mood-entries');
+      if (!response.ok) return [];
+      return response.json();
+    }
+  });
 
   const getMoodEmoji = (mood: number) => {
     switch (mood) {
@@ -79,14 +80,23 @@ export default function Admin() {
     }
   };
 
-  const handleResetData = () => {
+  const handleResetData = async () => {
     if (confirm("¿Estás seguro de que quieres eliminar TODOS los datos? Esta acción no se puede deshacer.")) {
-      LocalStorage.clearAllData();
-      toast({
-        title: "Sistema reiniciado",
-        description: "Todos los datos han sido eliminados.",
-      });
-      setLocation("/login");
+      try {
+        await fetch('/api/admin/reset', { method: 'POST' });
+        localStorage.clear();
+        toast({
+          title: "Sistema reiniciado",
+          description: "Todos los datos han sido eliminados.",
+        });
+        setLocation("/");
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo reiniciar el sistema.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -113,241 +123,140 @@ export default function Admin() {
     });
   };
 
-  const getUserById = (userId: number) => {
-    return allUsers.find(user => user.id === userId) || null;
-  };
+  // Statistics calculations
+  const totalUsers = allUsers.length;
+  const totalMoodEntries = allMoodEntries.length;
+  const averageMood = totalMoodEntries > 0 
+    ? (allMoodEntries.reduce((sum: number, entry: MoodEntry) => sum + entry.mood, 0) / totalMoodEntries).toFixed(1)
+    : "0";
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getCriticalEntries = () => {
-    return allMoodEntries.filter(entry => entry.mood <= 2);
-  };
-
-  const getEntriesWithNotes = () => {
-    return allMoodEntries.filter(entry => entry.notes && entry.notes.trim().length > 0);
-  };
+  const recentEntries = allMoodEntries.slice(0, 10);
 
   return (
     <div className="min-h-screen bg-light-bg p-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Shield className="w-6 h-6 text-primary" />
-              <span>Panel Administrativo - AcompañaMe</span>
-            </CardTitle>
-            <p className="text-sm text-muted-text">
-              Acceso completo al diario emocional y datos del sistema (Código maestro: 23092309)
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                      <Users className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Usuarios</h3>
-                      <p className="text-2xl font-bold text-primary">{allUsers.length}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Registros</h3>
-                      <p className="text-2xl font-bold text-secondary">{allMoodEntries.length}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-warning rounded-full flex items-center justify-center">
-                      <AlertTriangle className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Críticos</h3>
-                      <p className="text-2xl font-bold text-warning">{getCriticalEntries().length}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                      <Mail className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Con Notas</h3>
-                      <p className="text-2xl font-bold text-blue-500">{getEntriesWithNotes().length}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
             </div>
-
-            <div className="flex space-x-4">
-              <Button onClick={() => setLocation("/")} className="flex-1">
-                Volver a la aplicación
-              </Button>
-              <Button 
-                onClick={handleDownloadData}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Download className="w-4 h-4" />
-                <span>Exportar datos</span>
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleResetData}
-                className="flex items-center space-x-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Reiniciar sistema</span>
-              </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-dark-text">Panel de Administración</h1>
+              <p className="text-muted-text">Vista general del sistema AcompañaMe</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <Button
+            onClick={() => setLocation("/")}
+            variant="outline"
+          >
+            Volver al inicio
+          </Button>
+        </div>
 
-        {/* Users Section */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Users className="w-5 h-5" />
-              <span>Usuarios Registrados</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {allUsers.length === 0 ? (
-              <p className="text-muted-text text-center py-4">No hay usuarios registrados</p>
-            ) : (
-              <div className="space-y-4">
-                {allUsers.map((user) => (
-                  <Card key={user.id} className="border-l-4 border-l-primary">
-                    <CardContent className="p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-medium">{user.name}</h4>
-                          <p className="text-sm text-muted-text">
-                            {user.age} años • {user.gender}
-                          </p>
-                          <p className="text-xs text-muted-text">
-                            Registrado: {formatDate(user.createdAt)}
-                          </p>
-                        </div>
-                        <div>
-                          {user.guardianName && (
-                            <div>
-                              <p className="text-sm font-medium">Tutor/Cuidador:</p>
-                              <p className="text-sm">{user.guardianName}</p>
-                              {user.guardianEmail && (
-                                <p className="text-xs text-muted-text">{user.guardianEmail}</p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Usuarios</CardTitle>
+              <Users className="h-4 w-4 text-muted-text" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalUsers}</div>
+            </CardContent>
+          </Card>
 
-        {/* Detailed Mood Entries */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Registros de Estado</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-text" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalMoodEntries}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Estado Promedio</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-text" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{averageMood}/5</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Activity */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <BarChart3 className="w-5 h-5" />
-              <span>Diario Emocional Completo</span>
+              <Calendar className="w-5 h-5" />
+              <span>Actividad Reciente</span>
             </CardTitle>
-            <p className="text-sm text-muted-text">
-              Todos los registros emocionales con notas detalladas
-            </p>
           </CardHeader>
           <CardContent>
-            {allMoodEntries.length === 0 ? (
-              <p className="text-muted-text text-center py-8">No hay registros emocionales</p>
-            ) : (
-              <div className="space-y-4">
-                {allMoodEntries.map((entry) => {
-                  const user = getUserById(entry.userId);
-                  return (
-                    <Card key={entry.id} className={`border-l-4 ${
-                      entry.mood <= 2 ? 'border-l-red-500 bg-red-50' : 
-                      entry.mood === 3 ? 'border-l-yellow-500 bg-yellow-50' : 
-                      'border-l-green-500 bg-green-50'
-                    }`}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-2xl">{getMoodEmoji(entry.mood)}</span>
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <Badge className={getMoodBadgeColor(entry.mood)}>
-                                  {getMoodLabel(entry.mood)} ({entry.mood}/5)
-                                </Badge>
-                                {entry.mood <= 2 && (
-                                  <Badge variant="destructive" className="text-xs">
-                                    ⚠️ CRÍTICO
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-sm font-medium mt-1">
-                                {user ? user.name : `Usuario ID: ${entry.userId}`}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-medium">{formatDate(entry.date)}</p>
-                            <p className="text-xs text-muted-text">ID: {entry.id}</p>
-                          </div>
-                        </div>
-                        
-                        {entry.notes && entry.notes.trim().length > 0 && (
-                          <div className="mt-3 p-3 bg-white rounded-lg border">
-                            <p className="text-xs font-medium text-muted-text mb-1">
-                              📝 NOTAS ADICIONALES:
-                            </p>
-                            <p className="text-sm">{entry.notes}</p>
-                          </div>
+            <div className="space-y-3">
+              {recentEntries.length === 0 ? (
+                <p className="text-muted-text text-center py-4">No hay registros de actividad</p>
+              ) : (
+                recentEntries.map((entry: MoodEntry) => (
+                  <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{getMoodEmoji(entry.mood)}</span>
+                      <div>
+                        <p className="font-medium">Usuario #{entry.userId}</p>
+                        <p className="text-sm text-muted-text">
+                          {new Date(entry.date).toLocaleDateString('es-ES', { 
+                            day: 'numeric', 
+                            month: 'long', 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
+                        {entry.notes && (
+                          <p className="text-sm text-muted-text mt-1">"{entry.notes}"</p>
                         )}
-                        
-                        {!entry.notes && (
-                          <p className="text-xs text-muted-text italic">
-                            Sin notas adicionales
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
+                      </div>
+                    </div>
+                    <Badge className={getMoodBadgeColor(entry.mood)}>
+                      {getMoodLabel(entry.mood)}
+                    </Badge>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <FileText className="w-5 h-5" />
+              <span>Acciones del Sistema</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                onClick={handleDownloadData}
+                className="flex items-center space-x-2"
+                variant="outline"
+              >
+                <Download className="w-4 h-4" />
+                <span>Exportar Datos</span>
+              </Button>
+
+              <Button
+                onClick={handleResetData}
+                className="flex items-center space-x-2"
+                variant="destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Reiniciar Sistema</span>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

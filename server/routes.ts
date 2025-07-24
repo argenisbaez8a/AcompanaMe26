@@ -121,6 +121,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.get("/api/mood-entries", async (req, res) => {
+    try {
+      const entries = await storage.getAllMoodEntries();
+      res.json(entries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch mood entries" });
+    }
+  });
+
+  app.post("/api/admin/reset", async (req, res) => {
+    try {
+      await storage.clearAllData();
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to reset data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
