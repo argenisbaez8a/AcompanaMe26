@@ -7,24 +7,7 @@ import { Shield, Calendar, Users, BarChart3, Download, Trash2, FileText, Mail, A
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { LocalStorage } from "@/lib/localStorage";
-
-interface MoodEntry {
-  id: number;
-  userId: number;
-  mood: number;
-  notes?: string;
-  date: string;
-}
-
-interface User {
-  id: number;
-  name: string;
-  age: number;
-  gender: string;
-  guardianEmail?: string;
-  guardianName?: string;
-  createdAt: string;
-}
+import type { MoodEntry, User } from "@shared/schema";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -117,8 +100,9 @@ export default function Admin() {
     return allUsers.find(user => user.id === userId) || null;
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('es-ES', {
+  const formatDate = (date: string | Date) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
