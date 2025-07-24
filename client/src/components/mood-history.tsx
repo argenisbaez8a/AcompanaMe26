@@ -3,7 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { LocalStorage } from "@/lib/localStorage";
-import type { MoodEntry } from "@shared/schema";
+
+interface MoodEntry {
+  id: number;
+  userName: string;
+  mood: number;
+  notes?: string;
+  date: string;
+}
 
 interface MoodHistoryProps {
   userId: number;

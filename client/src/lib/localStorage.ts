@@ -1,26 +1,24 @@
 // Local storage management for mood diary entries
-import type { MoodEntry, User } from "@shared/schema";
+interface MoodEntry {
+  id: number;
+  userId: number;
+  mood: number;
+  notes?: string;
+  date: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  age: number;
+  gender: string;
+  guardianEmail?: string;
+  guardianName?: string;
+  createdAt: string;
+}
 
 const MOOD_ENTRIES_KEY = 'mindcare_mood_entries';
 const USERS_KEY = 'mindcare_users';
-
-// Helper functions to handle null/undefined conversion
-function deserializeMoodEntry(entry: any): MoodEntry {
-  return {
-    ...entry,
-    date: new Date(entry.date),
-    notes: entry.notes || undefined
-  };
-}
-
-function deserializeUser(user: any): User {
-  return {
-    ...user,
-    createdAt: new Date(user.createdAt),
-    guardianEmail: user.guardianEmail || undefined,
-    guardianName: user.guardianName || undefined
-  };
-}
 
 export class LocalStorage {
   // Mood entries management
@@ -29,10 +27,8 @@ export class LocalStorage {
       const entries = localStorage.getItem(MOOD_ENTRIES_KEY);
       if (!entries) return [];
       
-      const allEntries = JSON.parse(entries);
-      return allEntries
-        .filter((entry: any) => entry.userId === userId)
-        .map(deserializeMoodEntry);
+      const allEntries: MoodEntry[] = JSON.parse(entries);
+      return allEntries.filter(entry => entry.userId === userId);
     } catch (error) {
       console.error('Error getting mood entries:', error);
       return [];
@@ -47,8 +43,6 @@ export class LocalStorage {
       const newEntry: MoodEntry = {
         ...entry,
         id: Date.now(), // Simple ID generation
-        date: new Date(),
-        notes: entry.notes || null,
       };
       
       allEntries.push(newEntry);
@@ -64,7 +58,7 @@ export class LocalStorage {
   static getAllMoodEntries(): MoodEntry[] {
     try {
       const entries = localStorage.getItem(MOOD_ENTRIES_KEY);
-      return entries ? JSON.parse(entries).map(deserializeMoodEntry) : [];
+      return entries ? JSON.parse(entries) : [];
     } catch (error) {
       console.error('Error getting all mood entries:', error);
       return [];
@@ -77,9 +71,8 @@ export class LocalStorage {
       const users = localStorage.getItem(USERS_KEY);
       if (!users) return null;
       
-      const allUsers = JSON.parse(users);
-      const user = allUsers.find((user: any) => user.id === userId);
-      return user ? deserializeUser(user) : null;
+      const allUsers: User[] = JSON.parse(users);
+      return allUsers.find(user => user.id === userId) || null;
     } catch (error) {
       console.error('Error getting user:', error);
       return null;
@@ -94,7 +87,7 @@ export class LocalStorage {
       const newUser: User = {
         ...user,
         id: Date.now(),
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       };
       
       allUsers.push(newUser);
@@ -110,7 +103,7 @@ export class LocalStorage {
   static getAllUsers(): User[] {
     try {
       const users = localStorage.getItem(USERS_KEY);
-      return users ? JSON.parse(users).map(deserializeUser) : [];
+      return users ? JSON.parse(users) : [];
     } catch (error) {
       console.error('Error getting all users:', error);
       return [];
