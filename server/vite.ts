@@ -1,6 +1,10 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
@@ -68,17 +72,21 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  // Apunta a la carpeta de tu build de frontend:
+  // Como tu Vite dejó el build en dist/public, y este archivo compilado vive en dist/,
+  // __dirname === "…/dist", así que "public" queda en "…/dist/public".
+  const distPath = path.resolve(__dirname, "public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
+      `No se encontró la carpeta de build: ${distPath}. Asegúrate de correr "npm run build" antes de desplegar.`
     );
   }
 
+  // Sirve archivos estáticos del frontend (CSS, JS, imágenes…)
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
+  // Para cualquier ruta que NO sea API, devuelve index.html (SPA)
   app.use("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
