@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindCare - Tu Compañero de Bienestar Emocional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4A90E2',
+                        secondary: '#5CB3A8',
+                        accent: '#7ED321',
+                        'soft-blue': '#E8F4FD',
+                        'dark-text': '#2C3E50',
+                        'muted-text': '#6B7280',
+                        'light-bg': '#F8FAFC',
+                        'emergency': '#EF4444',
+                        'warning': '#F59E0B',
+                        'success': '#10B981'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light-bg font-inter">
+    <!-- @COMPONENT: AppContainer -->
+    <div class="min-h-screen flex flex-col">
+        <!-- @COMPONENT: Header -->
+        <header class="bg-white shadow-sm border-b border-gray-100 px-4 py-3">
+            <div class="max-w-md mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                        <i class="fas fa-heart text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-dark-text">MindCare</h1>
+                        <p class="text-sm text-muted-text" data-bind="user.greeting">Hola, María</p>
+                    </div>
+                </div>
+                <button class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-bell text-muted-text"></i>
+                </button>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: Header -->
+
+        <!-- @COMPONENT: MainContent -->
+        <main class="flex-1 max-w-md mx-auto w-full px-4 py-6">
+            <!-- @COMPONENT: WelcomeSection -->
+            <section class="mb-8">
+                <div class="bg-gradient-to-r from-primary to-secondary rounded-2xl p-6 text-white mb-6">
+                    <h2 class="text-xl font-semibold mb-2">¿Cómo te sientes hoy?</h2>
+                    <p class="text-blue-100 text-sm">Registra tu estado emocional y recibe apoyo personalizado</p>
+                </div>
+            </section>
+            <!-- @END_COMPONENT: WelcomeSection -->
+
+            <!-- @COMPONENT: MoodTracker -->
+            <section class="mb-8">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-semibold text-dark-text mb-4">Diario Emocional</h3>
+                    
+                    <!-- Mood Scale -->
+                    <div class="mb-6">
+                        <p class="text-sm text-muted-text mb-4">Selecciona cómo te sientes:</p>
+                        <div class="flex justify-between items-center space-x-2">
+                            <div class="flex flex-col items-center space-y-2">
+                                <button class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors" data-mood="1">
+                                    <i class="fas fa-sad-tear text-red-500 text-lg"></i>
+                                </button>
+                                <span class="text-xs text-muted-text">Muy mal</span>
+                            </div>
+                            <div class="flex flex-col items-center space-y-2">
+                                <button class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center hover:bg-orange-200 transition-colors" data-mood="2">
+                                    <i class="fas fa-frown text-orange-500 text-lg"></i>
+                                </button>
+                                <span class="text-xs text-muted-text">Mal</span>
+                            </div>
+                            <div class="flex flex-col items-center space-y-2">
+                                <button class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center hover:bg-yellow-200 transition-colors" data-mood="3">
+                                    <i class="fas fa-meh text-yellow-500 text-lg"></i>
+                                </button>
+                                <span class="text-xs text-muted-text">Regular</span>
+                            </div>
+                            <div class="flex flex-col items-center space-y-2">
+                                <button class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 transition-colors" data-mood="4">
+                                    <i class="fas fa-smile text-green-500 text-lg"></i>
+                                </button>
+                                <span class="text-xs text-muted-text">Bien</span>
+                            </div>
+                            <div class="flex flex-col items-center space-y-2">
+                                <button class="w-12 h-12 bg-success rounded-full flex items-center justify-center hover:bg-green-600 transition-colors" data-mood="5">
+                                    <i class="fas fa-laugh text-white text-lg"></i>
+                                </button>
+                                <span class="text-xs text-muted-text">Excelente</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mood Notes -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-dark-text mb-2">Notas adicionales (opcional)</label>
+                        <textarea 
+                            class="w-full p-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
+                            rows="3" 
+                            placeholder="¿Qué ha influido en tu estado de ánimo hoy?"
+                            data-mock="true"
+                        ></textarea>
+                    </div>
+
+                    <button class="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors" data-event="click:saveMoodEntry">
+                        <i class="fas fa-save mr-2"></i>Guardar Entrada
+                    </button>
+                </div>
+            </section>
+            <!-- @END_COMPONENT: MoodTracker -->
+
+            <!-- @COMPONENT: QuickActions -->
+            <section class="mb-8">
+                <h3 class="text-lg font-semibold text-dark-text mb-4">Herramientas de Bienestar</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                            <i class="fas fa-wind text-primary text-lg"></i>
+                        </div>
+                        <h4 class="font-medium text-dark-text text-sm mb-1">Respiración 4-7-8</h4>
+                        <p class="text-xs text-muted-text mb-3">Técnica de relajación</p>
+                        <button class="w-full bg-primary text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors" data-event="click:startBreathing">
+                            Iniciar
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
+                            <i class="fas fa-leaf text-secondary text-lg"></i>
+                        </div>
+                        <h4 class="font-medium text-dark-text text-sm mb-1">Meditación</h4>
+                        <p class="text-xs text-muted-text mb-3">Sesión de 5 minutos</p>
+                        <button class="w-full bg-secondary text-white py-2 rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors" data-event="click:startMeditation">
+                            Meditar
+                        </button>
+                    </div>
+                </div>
+            </section>
+            <!-- @END_COMPONENT: QuickActions -->
+
+            <!-- @COMPONENT: MoodHistory -->
+            <section class="mb-8">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-dark-text">Historial Emocional</h3>
+                        <button class="text-primary text-sm font-medium" data-event="click:viewFullHistory">Ver todo</button>
+                    </div>
+                    
+                    <!-- @MAP: moodHistory.slice(0, 7).map(entry => ( -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between py-2" data-mock="true">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+                                    <i class="fas fa-smile text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-dark-text">Hoy</p>
+                                    <p class="text-xs text-muted-text">Muy bien</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-muted-text">15:30</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2" data-mock="true">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-meh text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-dark-text">Ayer</p>
+                                    <p class="text-xs text-muted-text">Regular</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-muted-text">18:15</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2" data-mock="true">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-green-400 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-smile text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-dark-text">Hace 2 días</p>
+                                    <p class="text-xs text-muted-text">Bien</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-muted-text">20:30</span>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </section>
+            <!-- @END_COMPONENT: MoodHistory -->
+
+            <!-- @COMPONENT: ResourcesSection -->
+            <section class="mb-8">
+                <h3 class="text-lg font-semibold text-dark-text mb-4">Recursos y Apoyo</h3>
+                <div class="space-y-4">
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-book text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-dark-text">Sobre la Depresión</h4>
+                                <p class="text-sm text-muted-text">Mitos y verdades</p>
+                            </div>
+                        </div>
+                        <button class="w-full bg-purple-50 text-purple-600 py-2 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors" data-event="click:showDepressionInfo">
+                            Leer más
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-phone text-emergency"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-dark-text">Ayuda de Emergencia</h4>
+                                <p class="text-sm text-muted-text">Recursos inmediatos</p>
+                            </div>
+                        </div>
+                        <button class="w-full bg-red-50 text-emergency py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors" data-event="click:showEmergencyResources">
+                            Acceder
+                        </button>
+                    </div>
+                </div>
+            </section>
+            <!-- @END_COMPONENT: ResourcesSection -->
+
+            <!-- @COMPONENT: AlertsBanner -->
+            <section class="mb-8" data-mock="true">
+                <div class="bg-warning bg-opacity-10 border border-warning border-opacity-20 rounded-xl p-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-warning rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fas fa-exclamation text-white text-xs"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-warning text-sm mb-1">Patrón Detectado</h4>
+                            <p class="text-warning text-xs">Has registrado estados bajos por 3 días consecutivos. Considera hablar con un profesional.</p>
+                            <button class="mt-2 text-warning text-xs font-medium underline" data-event="click:viewRecommendations">
+                                Ver recomendaciones
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- @END_COMPONENT: AlertsBanner -->
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+
+        <!-- @COMPONENT: BottomNavigation -->
+        <nav class="bg-white border-t border-gray-100 px-4 py-2 sticky bottom-0">
+            <div class="max-w-md mx-auto flex justify-around">
+                <button class="flex flex-col items-center space-y-1 py-2 px-3 rounded-lg bg-primary bg-opacity-10" data-current="true">
+                    <i class="fas fa-home text-primary"></i>
+                    <span class="text-xs text-primary font-medium">Inicio</span>
+                </button>
+                <button class="flex flex-col items-center space-y-1 py-2 px-3 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-chart-line text-muted-text"></i>
+                    <span class="text-xs text-muted-text">Progreso</span>
+                </button>
+                <button class="flex flex-col items-center space-y-1 py-2 px-3 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-dumbbell text-muted-text"></i>
+                    <span class="text-xs text-muted-text">Ejercicios</span>
+                </button>
+                <button class="flex flex-col items-center space-y-1 py-2 px-3 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-user text-muted-text"></i>
+                    <span class="text-xs text-muted-text">Perfil</span>
+                </button>
+            </div>
+        </nav>
+        <!-- @END_COMPONENT: BottomNavigation -->
+    </div>
+    <!-- @END_COMPONENT: AppContainer -->
+
+    <!-- @COMPONENT: BreathingExerciseModal -->
+    <div id="breathingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden" data-modal="breathing">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-wind text-white text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-dark-text mb-2">Respiración 4-7-8</h3>
+                <p class="text-sm text-muted-text mb-6">Inhala 4 seg, mantén 7 seg, exhala 8 seg</p>
+                
+                <!-- Timer Circle -->
+                <div class="relative w-32 h-32 mx-auto mb-6">
+                    <div class="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+                    <div class="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" style="animation-duration: 4s;"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-primary" data-bind="breathingTimer.count">4</div>
+                            <div class="text-xs text-muted-text" data-bind="breathingTimer.phase">Inhala</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors" data-event="click:closeBreathingModal">
+                        Cerrar
+                    </button>
+                    <button class="flex-1 bg-primary text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors" data-event="click:startBreathingExercise">
+                        <i class="fas fa-play mr-2"></i>Iniciar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: BreathingExerciseModal -->
+
+    <!-- @COMPONENT: MeditationModal -->
+    <div id="meditationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden" data-modal="meditation">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-leaf text-white text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-dark-text mb-2">Meditación Guiada</h3>
+                <p class="text-sm text-muted-text mb-6">Sesión de 5 minutos para calmar la mente</p>
+                
+                <!-- Progress Circle -->
+                <div class="relative w-32 h-32 mx-auto mb-6">
+                    <div class="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+                    <div class="absolute inset-0 rounded-full border-4 border-secondary" style="border-top-color: transparent; transform: rotate(0deg);"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-secondary" data-bind="meditationTimer.minutes">5</div>
+                            <div class="text-xs text-muted-text">minutos</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors" data-event="click:closeMeditationModal">
+                        Cerrar
+                    </button>
+                    <button class="flex-1 bg-secondary text-white py-3 rounded-lg font-medium hover:bg-teal-600 transition-colors" data-event="click:startMeditation">
+                        <i class="fas fa-play mr-2"></i>Comenzar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: MeditationModal -->
+
+    <!-- @COMPONENT: EmergencyResourcesModal -->
+    <div id="emergencyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden" data-modal="emergency">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full max-h-[80vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-dark-text">Recursos de Emergencia</h3>
+                <button class="p-2 hover:bg-gray-100 rounded-full transition-colors" data-event="click:closeEmergencyModal">
+                    <i class="fas fa-times text-muted-text"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <h4 class="font-semibold text-emergency mb-2">Crisis Inmediata</h4>
+                    <p class="text-sm text-red-700 mb-3">Si tienes pensamientos de autolesión o suicidio</p>
+                    <button class="w-full bg-emergency text-white py-2 rounded-lg font-medium hover:bg-red-600 transition-colors" data-event="click:callEmergency">
+                        <i class="fas fa-phone mr-2"></i>Llamar 911
+                    </button>
+                </div>
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <h4 class="font-semibold text-primary mb-2">Línea de Apoyo</h4>
+                    <p class="text-sm text-blue-700 mb-3">Línea Nacional de Prevención del Suicidio</p>
+                    <button class="w-full bg-primary text-white py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors" data-event="click:callSuicideLine">
+                        <i class="fas fa-phone mr-2"></i>988
+                    </button>
+                </div>
+                
+                <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <h4 class="font-semibold text-secondary mb-2">Centros de Salud Mental</h4>
+                    <!-- @MAP: mentalHealthCenters.map(center => ( -->
+                    <div class="space-y-2" data-mock="true">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-medium text-dark-text">Centro de Salud Mental Norte</p>
+                                <p class="text-xs text-muted-text">Calle Principal 123</p>
+                            </div>
+                            <button class="text-secondary text-sm font-medium" data-event="click:getDirections">
+                                Ir
+                            </button>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-medium text-dark-text">Hospital General - Psiquiatría</p>
+                                <p class="text-xs text-muted-text">Av. Salud 456</p>
+                            </div>
+                            <button class="text-secondary text-sm font-medium" data-event="click:getDirections">
+                                Ir
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: EmergencyResourcesModal -->
+
+    <!-- @COMPONENT: DepressionInfoModal -->
+    <div id="depressionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden" data-modal="depression">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full max-h-[80vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-dark-text">Sobre la Depresión</h3>
+                <button class="p-2 hover:bg-gray-100 rounded-full transition-colors" data-event="click:closeDepressionModal">
+                    <i class="fas fa-times text-muted-text"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <h4 class="font-semibold text-dark-text mb-3 flex items-center">
+                        <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                        Mitos Comunes
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="bg-red-50 border-l-4 border-red-400 p-3">
+                            <p class="text-sm text-red-700">"La depresión es solo tristeza"</p>
+                        </div>
+                        <div class="bg-red-50 border-l-4 border-red-400 p-3">
+                            <p class="text-sm text-red-700">"Solo afecta a personas débiles"</p>
+                        </div>
+                        <div class="bg-red-50 border-l-4 border-red-400 p-3">
+                            <p class="text-sm text-red-700">"Se puede superar solo con voluntad"</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-dark-text mb-3 flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        Realidades
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="bg-green-50 border-l-4 border-green-400 p-3">
+                            <p class="text-sm text-green-700">Es una enfermedad médica real con síntomas físicos y mentales</p>
+                        </div>
+                        <div class="bg-green-50 border-l-4 border-green-400 p-3">
+                            <p class="text-sm text-green-700">Puede afectar a cualquier persona, independientemente de su fortaleza</p>
+                        </div>
+                        <div class="bg-green-50 border-l-4 border-green-400 p-3">
+                            <p class="text-sm text-green-700">Requiere tratamiento profesional y es completamente tratable</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-dark-text mb-3">Señales de Alerta</h4>
+                    <ul class="space-y-2 text-sm text-muted-text">
+                        <li class="flex items-start">
+                            <i class="fas fa-circle text-xs mt-2 mr-2 text-primary"></i>
+                            Tristeza persistente por más de 2 semanas
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-circle text-xs mt-2 mr-2 text-primary"></i>
+                            Pérdida de interés en actividades antes placenteras
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-circle text-xs mt-2 mr-2 text-primary"></i>
+                            Cambios significativos en el sueño o apetito
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-circle text-xs mt-2 mr-2 text-primary"></i>
+                            Fatiga o pérdida de energía
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-circle text-xs mt-2 mr-2 text-primary"></i>
+                            Pensamientos de muerte o suicidio
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: DepressionInfoModal -->
+
+    <script>
+        // TODO: Implement comprehensive React state management, API integration, and business logic
+        
+        (function() {
+            // Modal functionality
+            const showModal = (modalId) => {
+                document.getElementById(modalId).classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            };
+            
+            const hideModal = (modalId) => {
+                document.getElementById(modalId).classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            };
+            
+            // Event listeners for modal triggers
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('[data-event="click:startBreathing"]')) {
+                    showModal('breathingModal');
+                }
+                if (e.target.closest('[data-event="click:startMeditation"]')) {
+                    showModal('meditationModal');
+                }
+                if (e.target.closest('[data-event="click:showEmergencyResources"]')) {
+                    showModal('emergencyModal');
+                }
+                if (e.target.closest('[data-event="click:showDepressionInfo"]')) {
+                    showModal('depressionModal');
+                }
+                
+                // Close modal buttons
+                if (e.target.closest('[data-event="click:closeBreathingModal"]')) {
+                    hideModal('breathingModal');
+                }
+                if (e.target.closest('[data-event="click:closeMeditationModal"]')) {
+                    hideModal('meditationModal');
+                }
+                if (e.target.closest('[data-event="click:closeEmergencyModal"]')) {
+                    hideModal('emergencyModal');
+                }
+                if (e.target.closest('[data-event="click:closeDepressionModal"]')) {
+                    hideModal('depressionModal');
+                }
+            });
+            
+            // Close modals when clicking outside
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('fixed') && e.target.classList.contains('inset-0')) {
+                    const modals = ['breathingModal', 'meditationModal', 'emergencyModal', 'depressionModal'];
+                    modals.forEach(modalId => {
+                        if (!document.getElementById(modalId).classList.contains('hidden')) {
+                            hideModal(modalId);
+                        }
+                    });
+                }
+            });
+            
+            // Mood selection
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('[data-mood]')) {
+                    const moodButtons = document.querySelectorAll('[data-mood]');
+                    moodButtons.forEach(btn => btn.classList.remove('ring-2', 'ring-offset-2'));
+                    e.target.closest('[data-mood]').classList.add('ring-2', 'ring-offset-2', 'ring-blue-500');
+                    // TODO: Store mood selection in state
+                }
+            });
+            
+            // TODO: Implement timer functionality for breathing exercises
+            // TODO: Implement meditation session management
+            // TODO: Implement mood tracking and analytics
+            // TODO: Implement emergency contact integration
+            // TODO: Implement pattern detection and alert system
+            // TODO: Implement local storage for mood history
+            // TODO: Implement user profile management
+            // TODO: Implement notification system
+            // TODO: Implement progress tracking and visualization
+        })();
+    </script>
+</body>
+</html>
